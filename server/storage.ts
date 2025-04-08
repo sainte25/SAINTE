@@ -14,6 +14,9 @@ import {
 // modify the interface with any CRUD methods
 // you might need
 
+import { db } from "./db";
+import { and, asc, desc, eq } from "drizzle-orm";
+
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -484,12 +487,12 @@ export class MemStorage implements IStorage {
     // Handle arrays properly
     let strengths: string[] | null = null;
     if (insight.strengthsIdentified && Array.isArray(insight.strengthsIdentified)) {
-      strengths = insight.strengthsIdentified;
+      strengths = insight.strengthsIdentified.map(item => String(item));
     }
     
     let resources: string[] | null = null;
     if (insight.suggestedResources && Array.isArray(insight.suggestedResources)) {
-      resources = insight.suggestedResources;
+      resources = insight.suggestedResources.map(item => String(item));
     }
     
     const newInsight: AiInsight = {
@@ -506,4 +509,193 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database implementation of the storage interface
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+  
+  async getDailySteps(userId: number): Promise<DailyStep[]> {
+    return await db.select().from(dailySteps).where(eq(dailySteps.userId, userId));
+  }
+
+  async getDailyStep(id: number): Promise<DailyStep | undefined> {
+    const [step] = await db.select().from(dailySteps).where(eq(dailySteps.id, id));
+    return step || undefined;
+  }
+
+  async createDailyStep(step: InsertDailyStep): Promise<DailyStep> {
+    const [newStep] = await db.insert(dailySteps).values(step).returning();
+    return newStep;
+  }
+
+  async updateDailyStep(id: number, updates: Partial<DailyStep>): Promise<DailyStep | undefined> {
+    const [updatedStep] = await db.update(dailySteps)
+      .set(updates)
+      .where(eq(dailySteps.id, id))
+      .returning();
+    return updatedStep || undefined;
+  }
+
+  async deleteDailyStep(id: number): Promise<boolean> {
+    await db.delete(dailySteps).where(eq(dailySteps.id, id));
+    return true;
+  }
+  
+  async getRecentMoods(userId: number): Promise<Mood[]> {
+    return await db.select().from(moods)
+      .where(eq(moods.userId, userId))
+      .orderBy(desc(moods.date))
+      .limit(10);
+  }
+
+  async createMood(mood: InsertMood): Promise<Mood> {
+    const [newMood] = await db.insert(moods).values(mood).returning();
+    return newMood;
+  }
+  
+  async getCurrentSccsScore(userId: number): Promise<SccsScore | undefined> {
+    const [score] = await db.select().from(sccsScores)
+      .where(eq(sccsScores.userId, userId))
+      .orderBy(desc(sccsScores.date))
+      .limit(1);
+    return score || undefined;
+  }
+  
+  async getUpcomingEvents(userId: number): Promise<Event[]> {
+    return await db.select().from(events)
+      .where(eq(events.userId, userId))
+      .orderBy(asc(events.date));
+  }
+
+  async updateEventStatus(id: number, userId: number, status: string): Promise<Event | undefined> {
+    const [updatedEvent] = await db.update(events)
+      .set({ status })
+      .where(and(eq(events.id, id), eq(events.userId, userId)))
+      .returning();
+    return updatedEvent || undefined;
+  }
+  
+  async getCareTeam(userId: number): Promise<CareTeamMember[]> {
+    return await db.select().from(careTeamMembers)
+      .where(eq(careTeamMembers.userId, userId));
+  }
+  
+  async getRecommendedResources(userId: number): Promise<(Resource & { isBookmarked?: boolean })[]> {
+    const resourcesList = await db.select().from(resources);
+    
+    // Get user bookmarks
+    const userBookmarks = await db.select()
+      .from(userResources)
+      .where(eq(userResources.userId, userId));
+    
+    const bookmarkedResourceIds = new Set(userBookmarks.map(b => b.resourceId));
+    
+    // Add isBookmarked flag to each resource
+    return resourcesList.map(resource => ({
+      ...resource,
+      isBookmarked: bookmarkedResourceIds.has(resource.id)
+    }));
+  }
+
+  async bookmarkResource(userResource: InsertUserResource): Promise<UserResource> {
+    try {
+      // Check if bookmark already exists
+      const [existingBookmark] = await db.select()
+        .from(userResources)
+        .where(
+          and(
+            eq(userResources.userId, userResource.userId),
+            eq(userResources.resourceId, userResource.resourceId)
+          )
+        );
+      
+      if (existingBookmark) {
+        // Update existing bookmark
+        const [updatedBookmark] = await db.update(userResources)
+          .set({ isBookmarked: userResource.isBookmarked ?? true })
+          .where(eq(userResources.id, existingBookmark.id))
+          .returning();
+        return updatedBookmark;
+      } else {
+        // Create new bookmark
+        const [newBookmark] = await db.insert(userResources)
+          .values(userResource)
+          .returning();
+        return newBookmark;
+      }
+    } catch (error) {
+      console.error("Error in bookmarkResource:", error);
+      throw error;
+    }
+  }
+
+  async removeResourceBookmark(userId: number, resourceId: number): Promise<boolean> {
+    await db.delete(userResources)
+      .where(
+        and(
+          eq(userResources.userId, userId),
+          eq(userResources.resourceId, resourceId)
+        )
+      );
+    return true;
+  }
+  
+  async getChatMessages(userId: number, chatSessionId: string): Promise<ChatMessage[]> {
+    return await db.select()
+      .from(chatMessages)
+      .where(
+        and(
+          eq(chatMessages.userId, userId),
+          eq(chatMessages.chatSessionId, chatSessionId)
+        )
+      )
+      .orderBy(asc(chatMessages.createdAt));
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const [newMessage] = await db.insert(chatMessages)
+      .values(message)
+      .returning();
+    return newMessage;
+  }
+  
+  async getLatestAiInsight(userId: number): Promise<AiInsight | undefined> {
+    const [insight] = await db.select()
+      .from(aiInsights)
+      .where(eq(aiInsights.userId, userId))
+      .orderBy(desc(aiInsights.createdAt))
+      .limit(1);
+    return insight || undefined;
+  }
+
+  async createAiInsight(insight: InsertAiInsight): Promise<AiInsight> {
+    // Use explicit type casting for proper insert
+    const insertData = {
+      userId: insight.userId,
+      insights: insight.insights,
+      // Use empty arrays if data is missing
+      strengthsIdentified: insight.strengthsIdentified || [],
+      suggestedResources: insight.suggestedResources || []
+    };
+    
+    const [newInsight] = await db.insert(aiInsights)
+      .values(insertData)
+      .returning();
+    return newInsight;
+  }
+}
+
+// Use database storage instead of memory storage
+export const storage = new DatabaseStorage();
