@@ -54,17 +54,15 @@ export default function MobileNavigation() {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-between items-center px-2 py-1 z-10">
       {navItems.map((item, index) => (
-        <Link key={index} href={item.href}>
-          <a className={`flex flex-col items-center py-1 px-2 text-xs ${
-            item.active 
-              ? "text-primary" 
-              : "text-gray-500 hover:text-gray-700"
-          }`}>
-            <item.icon className={`w-5 h-5 mb-1 ${
-              item.active ? "text-primary" : "text-gray-500"  
-            }`} />
-            <span>{item.label}</span>
-          </a>
+        <Link key={index} href={item.href} className={`flex flex-col items-center py-1 px-2 text-xs ${
+          item.active 
+            ? "text-primary" 
+            : "text-gray-500 hover:text-gray-700"
+        }`}>
+          <item.icon className={`w-5 h-5 mb-1 ${
+            item.active ? "text-primary" : "text-gray-500"  
+          }`} />
+          <span>{item.label}</span>
         </Link>
       ))}
     </div>

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useLocation, useRouter } from "wouter";
+import React from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Monitor, Smartphone } from "lucide-react";
 import {
@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function PlatformToggle() {
-  const [location] = useLocation();
-  const [, navigate] = useRouter();
+  const [location, setLocation] = useLocation();
   
   // Determine if we're in the mobile view
   const isMobileView = location.startsWith("/mobile");
@@ -20,19 +19,19 @@ export default function PlatformToggle() {
     if (isMobileView) {
       // Switch to desktop view - convert "/mobile/..." paths to "/dashboard/..."
       const desktopPath = location.replace("/mobile", "/dashboard");
-      navigate(desktopPath);
+      setLocation(desktopPath);
     } else {
       // Switch to mobile view - convert other paths to "/mobile/..."
       const parts = location.split("/").filter(Boolean);
       
       // For the home page or empty path
       if (parts.length === 0) {
-        navigate("/mobile");
+        setLocation("/mobile");
         return;
       }
       
       // For other paths
-      navigate("/mobile");
+      setLocation("/mobile");
     }
   };
   
