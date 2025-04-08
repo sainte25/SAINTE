@@ -1,10 +1,10 @@
-import { drizzle } from "drizzle-orm/neon-serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import * as schema from "@shared/schema";
 
 // Create a connection to the database
 const sql = neon(process.env.DATABASE_URL!);
-// @ts-expect-error - Known type mismatch with the newest versions of drizzle and neon
+// Create a drizzle client
 export const db = drizzle(sql, { schema });
 
 // Log successful connection

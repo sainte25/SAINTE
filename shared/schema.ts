@@ -3,6 +3,26 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// Define possible roles based on document
+export type UserRole = 
+  | "client"
+  | "peer_mentor"
+  | "community_health_worker" 
+  | "case_manager"
+  | "supervisor"
+  | "primary_care_provider"
+  | "external_partner"
+  | "admin";
+
+// Organization types
+export type OrganizationType = 
+  | "reentry"
+  | "housing"
+  | "health_system"
+  | "behavioral_health"
+  | "workforce"
+  | "other";
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -11,10 +31,14 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   email: text("email"),
-  role: text("role").default("client").notNull(), // client, chw, peer_mentor, case_manager, admin
+  phone: text("phone"),
+  role: text("role").$type<UserRole>().default("client").notNull(),
   avatarInitials: text("avatar_initials"),
   tier: text("tier").default("bronze"), // bronze, silver, gold
+  organization: text("organization"),
+  organizationType: text("organization_type").$type<OrganizationType>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -26,6 +50,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   userResources: many(userResources),
   chatMessages: many(chatMessages),
   aiInsights: many(aiInsights),
+  mindsetAssessments: many(mindsetAssessments),
+  shameDisruptionLogs: many(shameDisruptionLogs),
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -34,8 +60,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   lastName: true,
   email: true,
+  phone: true,
   role: true,
   avatarInitials: true,
+  organization: true,
+  organizationType: true,
 });
 
 // Daily steps model
@@ -321,6 +350,71 @@ export const insertAiInsightSchema = createInsertSchema(aiInsights).pick({
   suggestedResources: true,
 });
 
+// Mindset Assessment model
+export const mindsetAssessments = pgTable("mindset_assessments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  purposeStatement: text("purpose_statement"),
+  passionTags: json("passion_tags").$type<string[]>(),
+  shameReframeJournal: json("shame_reframe_journal").$type<string[]>(),
+  growthCheckpoints: json("growth_checkpoints").$type<string[]>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    userIdIdx: index("mindset_assessments_user_id_idx").on(table.userId),
+  }
+});
+
+export const mindsetAssessmentsRelations = relations(mindsetAssessments, ({ one }) => ({
+  user: one(users, {
+    fields: [mindsetAssessments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertMindsetAssessmentSchema = createInsertSchema(mindsetAssessments).pick({
+  userId: true,
+  purposeStatement: true,
+  passionTags: true,
+  shameReframeJournal: true,
+  growthCheckpoints: true,
+});
+
+// Shame Disruption System
+export const shameDisruptionLogs = pgTable("shame_disruption_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  signalType: text("signal_type").notNull(), // behavior, text, avoidance, emotional
+  detectedBy: text("detected_by").notNull(), // AI_chat, NLP_text_scan, system_flag
+  interventionUsed: text("intervention_used"), // reflection, journaling, breathwork
+  resolved: boolean("resolved").default(false),
+  feedback: text("feedback"), // Was this helpful?
+  sharedWithTeam: boolean("shared_with_team").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    userIdIdx: index("shame_disruption_logs_user_id_idx").on(table.userId),
+  }
+});
+
+export const shameDisruptionLogsRelations = relations(shameDisruptionLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [shameDisruptionLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertShameDisruptionLogSchema = createInsertSchema(shameDisruptionLogs).pick({
+  userId: true,
+  signalType: true,
+  detectedBy: true,
+  interventionUsed: true,
+  resolved: true,
+  feedback: true,
+  sharedWithTeam: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -351,3 +445,9 @@ export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 
 export type AiInsight = typeof aiInsights.$inferSelect;
 export type InsertAiInsight = z.infer<typeof insertAiInsightSchema>;
+
+export type MindsetAssessment = typeof mindsetAssessments.$inferSelect;
+export type InsertMindsetAssessment = z.infer<typeof insertMindsetAssessmentSchema>;
+
+export type ShameDisruptionLog = typeof shameDisruptionLogs.$inferSelect;
+export type InsertShameDisruptionLog = z.infer<typeof insertShameDisruptionLogSchema>;
