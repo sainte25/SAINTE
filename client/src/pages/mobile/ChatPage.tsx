@@ -1,226 +1,256 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { v4 as uuidv4 } from "uuid";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import React, { useState, useRef, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import MobileLayout from "@/components/mobile/MobileLayout";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Info, RefreshCw } from "lucide-react";
-
-interface ChatMessage {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
-  chatSessionId: string;
-  timestamp?: string;
-}
+import { 
+  Send, 
+  Sparkles, 
+  Bot, 
+  User,
+  Info,
+  Loader2,
+  RefreshCw,
+  ThumbsUp,
+  ThumbsDown
+} from "lucide-react";
+import { ChatMessage } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { toast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from "uuid";
 
 export default function ChatPage() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [message, setMessage] = useState("");
+  const [chatSessionId, setChatSessionId] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const [message, setMessage] = useState("");
-  const [chatSessionId, setChatSessionId] = useState<string>(() => {
-    // Get existing session ID from localStorage or create a new one
-    const storedSessionId = localStorage.getItem("chat_session_id");
-    if (storedSessionId) return storedSessionId;
-    
-    const newSessionId = uuidv4();
-    localStorage.setItem("chat_session_id", newSessionId);
-    return newSessionId;
-  });
+  useEffect(() => {
+    // Generate a unique session ID when component mounts
+    if (!chatSessionId) {
+      setChatSessionId(uuidv4());
+    }
+  }, [chatSessionId]);
   
-  // Get chat history
-  const { data: chatHistory, isLoading: historyLoading } = useQuery<ChatMessage[]>({
+  // Get chat messages
+  const { 
+    data: chatMessages,
+    isLoading: messagesLoading,
+    refetch
+  } = useQuery<ChatMessage[]>({
     queryKey: ['/api/ai/chat', chatSessionId],
     queryFn: async () => {
-      try {
-        const data = await apiRequest(`/api/ai/chat/${chatSessionId}`);
-        return data;
-      } catch (error) {
-        // If there's an error, it could be a new chat. Return empty array
-        return [];
-      }
+      if (!chatSessionId) return [];
+      return await apiRequest(`/api/ai/chat/${chatSessionId}`);
     },
+    enabled: !!chatSessionId,
     refetchOnWindowFocus: false,
   });
   
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (data: { role: string; content: string; chatSessionId: string }) => {
+    mutationFn: async (content: string) => {
       return await apiRequest(`/api/ai/chat/${chatSessionId}`, {
         method: 'POST',
-        data,
+        data: {
+          role: 'user',
+          content,
+          chatSessionId
+        }
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/ai/chat', chatSessionId] });
       setMessage("");
     },
-    onError: () => {
+    onError: (error) => {
       toast({
-        title: "Error sending message",
-        description: "Please try again later.",
+        title: "Error",
+        description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
-    },
+      console.error("Error sending message:", error);
+    }
   });
   
-  // Scroll to bottom of chat when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatHistory]);
-  
-  // Handle message submission
-  const handleSendMessage = () => {
-    if (message.trim() === "") return;
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
     
-    sendMessageMutation.mutate({
-      role: "user",
-      content: message.trim(),
-      chatSessionId,
-    });
+    sendMessageMutation.mutate(message);
   };
   
-  // Handle pressing Enter to send message
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  };
+  }, [chatMessages]);
   
-  // Start a new chat session
-  const handleNewChat = () => {
-    const newSessionId = uuidv4();
-    localStorage.setItem("chat_session_id", newSessionId);
-    setChatSessionId(newSessionId);
-    queryClient.invalidateQueries({ queryKey: ['/api/ai/chat'] });
-  };
-  
-  // Format timestamp to readable time
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
   return (
-    <MobileLayout headerTitle="AI Companion">
+    <MobileLayout headerTitle="AI Companion" showBackButton>
       <div className="flex flex-col h-[calc(100vh-8rem)]">
-        {/* Chat Header */}
-        <div className="bg-slate-50 p-4 border-b">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
-                <span>AI</span>
-              </div>
-              <div>
-                <h3 className="font-medium">SAINTE Assistant</h3>
-                <p className="text-xs text-slate-500">Your personal support companion</p>
-              </div>
+        {/* Chat header */}
+        <div className="p-4 bg-primary/5 border-b border-primary/10">
+          <div className="flex items-center">
+            <Bot className="h-8 w-8 text-primary mr-3" />
+            <div>
+              <h2 className="font-medium">SAINTE AI Companion</h2>
+              <p className="text-xs text-gray-600">
+                Ask me questions, get support, or explore resources
+              </p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleNewChat}
-              className="flex items-center gap-1"
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="ml-auto"
+              onClick={() => refetch()}
             >
-              <RefreshCw className="h-4 w-4" /> New Chat
+              <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
         </div>
         
-        {/* Chat Messages */}
+        {/* Chat messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Welcome Message */}
-          {(!chatHistory || chatHistory.length === 0) && !historyLoading && (
-            <div className="bg-blue-50 p-4 rounded-lg text-center">
-              <h2 className="font-bold mb-2">Welcome to Your AI Companion</h2>
-              <p className="text-sm text-slate-600 mb-4">
-                I'm here to support your journey. You can talk to me about your goals, 
-                challenges, or just how you're feeling today.
-              </p>
-              <div className="flex justify-center">
-                <Info className="h-5 w-5 text-blue-500 mr-2" />
-                <p className="text-xs text-slate-500">
-                  Your care team can only see this chat with your permission
-                </p>
-              </div>
+          {messagesLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
             </div>
-          )}
-          
-          {/* Loading State */}
-          {historyLoading && (
-            <div className="text-center py-4">
-              <div className="animate-spin mb-2 mx-auto h-6 w-6 border-2 border-gray-300 border-t-primary rounded-full"></div>
-              <p>Loading conversation...</p>
-            </div>
-          )}
-          
-          {/* Chat Messages */}
-          {chatHistory && chatHistory.map((msg) => (
-            <div 
-              key={msg.id} 
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+          ) : chatMessages && chatMessages.length > 0 ? (
+            chatMessages.map((msg, index) => (
               <div 
-                className={`max-w-[80%] p-3 rounded-lg ${
-                  msg.role === 'user' 
-                    ? 'bg-primary text-white rounded-tr-none' 
-                    : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                }`}
+                key={index}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <p className="whitespace-pre-wrap">{msg.content}</p>
-                {msg.timestamp && (
-                  <div className="text-xs mt-1 opacity-70 text-right">
-                    {formatTime(msg.timestamp)}
+                <div className={`max-w-[80%] rounded-lg p-3 ${
+                  msg.role === 'user' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  <div className="flex items-center mb-1">
+                    {msg.role === 'user' ? (
+                      <>
+                        <span className="text-xs font-medium">You</span>
+                        <User className="h-3 w-3 ml-1" />
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        <span className="text-xs font-medium">AI Companion</span>
+                      </>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          ))}
-          
-          {/* Show loading state when sending */}
-          {sendMessageMutation.isPending && (
-            <div className="flex justify-start">
-              <div className="bg-gray-100 p-3 rounded-lg rounded-tl-none">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                  
+                  {/* Feedback buttons for AI messages */}
+                  {msg.role === 'assistant' && (
+                    <div className="flex justify-end mt-2 gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 rounded-full bg-white/20 hover:bg-white/30"
+                      >
+                        <ThumbsUp className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 rounded-full bg-white/20 hover:bg-white/30"
+                      >
+                        <ThumbsDown className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-center p-4">
+              <Bot className="h-12 w-12 text-primary/40 mb-4" />
+              <h3 className="text-lg font-medium text-gray-700">Welcome to your AI Companion</h3>
+              <p className="text-sm text-gray-500 max-w-md mt-2">
+                I'm here to support your wellness journey, provide information, and help you navigate resources. 
+                What would you like to talk about today?
+              </p>
+              
+              <div className="grid grid-cols-2 gap-2 mt-6 w-full max-w-md">
+                <SuggestionButton 
+                  text="How are you feeling today?"
+                  onClick={() => setMessage("How are you feeling today?")}
+                />
+                <SuggestionButton 
+                  text="Can you suggest coping strategies?"
+                  onClick={() => setMessage("Can you suggest coping strategies for stress?")}
+                />
+                <SuggestionButton 
+                  text="What resources are available?"
+                  onClick={() => setMessage("What resources are available near me?")}
+                />
+                <SuggestionButton 
+                  text="Help with my daily goals"
+                  onClick={() => setMessage("Help me with my daily goals")}
+                />
+              </div>
             </div>
           )}
-          
           <div ref={messagesEndRef} />
         </div>
         
-        {/* Message Input */}
-        <div className="p-4 border-t bg-white">
-          <div className="flex items-end gap-2">
+        {/* Message input */}
+        <div className="p-4 border-t">
+          <form onSubmit={handleSendMessage} className="flex items-end gap-2">
             <Textarea
+              placeholder="Type your message..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              className="min-h-[60px] resize-none"
+              className="resize-none"
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
             />
             <Button 
-              onClick={handleSendMessage}
-              disabled={message.trim() === "" || sendMessageMutation.isPending}
-              className="rounded-full h-10 w-10 p-0 flex items-center justify-center"
+              type="submit" 
+              size="icon"
+              disabled={sendMessageMutation.isPending || !message.trim()}
             >
-              <Send className="h-5 w-5" />
+              {sendMessageMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
             </Button>
+          </form>
+          
+          <div className="flex items-center justify-center mt-2">
+            <Info className="h-3 w-3 text-gray-400 mr-1" />
+            <span className="text-xs text-gray-400">
+              This is an AI assistant. For emergencies, contact your care team directly.
+            </span>
           </div>
-          <p className="text-xs text-center text-slate-500 mt-2">
-            This is a private conversation. Your data is protected.
-          </p>
         </div>
       </div>
     </MobileLayout>
+  );
+}
+
+interface SuggestionButtonProps {
+  text: string;
+  onClick: () => void;
+}
+
+function SuggestionButton({ text, onClick }: SuggestionButtonProps) {
+  return (
+    <Button 
+      variant="outline" 
+      className="justify-start h-auto py-2 text-left"
+      onClick={onClick}
+    >
+      <span className="text-xs">{text}</span>
+    </Button>
   );
 }

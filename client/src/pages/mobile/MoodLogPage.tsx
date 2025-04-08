@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { useLocation } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import MobileLayout from "@/components/mobile/MobileLayout";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Mood } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { toast } from "@/hooks/use-toast";
+import { Calendar } from "lucide-react";
 
 type MoodType = 'great' | 'good' | 'okay' | 'low' | 'struggling';
 
@@ -17,126 +19,186 @@ type MoodOption = {
 };
 
 export default function MoodLogPage() {
-  const [, navigate] = useLocation();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const moodOptions: MoodOption[] = [
+    { type: 'great', emoji: '😄', label: 'Great' },
+    { type: 'good', emoji: '🙂', label: 'Good' },
+    { type: 'okay', emoji: '😐', label: 'Okay' },
+    { type: 'low', emoji: '😔', label: 'Low' },
+    { type: 'struggling', emoji: '😣', label: 'Struggling' }
+  ];
   
   const [selectedMood, setSelectedMood] = useState<MoodOption | null>(null);
   const [notes, setNotes] = useState("");
   
-  const moodOptions: MoodOption[] = [
-    { type: 'great', emoji: '😁', label: 'Great' },
-    { type: 'good', emoji: '🙂', label: 'Good' },
-    { type: 'okay', emoji: '😐', label: 'Okay' },
-    { type: 'low', emoji: '😔', label: 'Low' },
-    { type: 'struggling', emoji: '😣', label: 'Struggling' },
-  ];
-
-  const logMoodMutation = useMutation({
-    mutationFn: async (data: { mood: string; emoji: string; notes: string; date: string }) => {
+  // Add new mood log
+  const addMoodMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedMood) return null;
+      
       return await apiRequest('/api/moods', {
         method: 'POST',
-        data,
+        data: {
+          mood: selectedMood.type,
+          emoji: selectedMood.emoji,
+          notes: notes,
+          date: new Date().toISOString(),
+        }
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/moods/recent'] });
-      
       toast({
         title: "Mood logged",
-        description: "Thank you for sharing how you're feeling today.",
+        description: "Your mood has been logged successfully.",
       });
-      
-      navigate("/mobile");
+      // Reset form
+      setSelectedMood(null);
+      setNotes("");
     },
     onError: (error) => {
       toast({
-        title: "Error logging mood",
-        description: "Please try again later.",
+        title: "Error",
+        description: "Failed to log your mood. Please try again.",
         variant: "destructive",
       });
-    },
+      console.error("Error logging mood:", error);
+    }
   });
-
-  const handleSubmit = () => {
+  
+  // Get recent moods
+  const { data: recentMoods, isLoading } = useQuery<Mood[]>({
+    queryKey: ['/api/moods/recent'],
+    refetchOnWindowFocus: false,
+  });
+  
+  const handleMoodSelection = (mood: MoodOption) => {
+    setSelectedMood(mood);
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!selectedMood) {
       toast({
-        title: "Please select a mood",
-        description: "Let us know how you're feeling today.",
+        title: "Missing information",
+        description: "Please select your mood.",
         variant: "destructive",
       });
       return;
     }
-
-    const today = new Date().toISOString().split('T')[0];
-    
-    logMoodMutation.mutate({
-      mood: selectedMood.type,
-      emoji: selectedMood.emoji,
-      notes: notes,
-      date: today,
-    });
+    addMoodMutation.mutate();
   };
-
-  const handleBack = () => {
-    navigate("/mobile");
-  };
-
+  
   return (
-    <MobileLayout 
-      headerTitle="How are you feeling?" 
-      showBackButton={true} 
-      onBack={handleBack}
-    >
-      <div className="p-4 max-w-md mx-auto space-y-6">
-        <div className="grid grid-cols-5 gap-2">
-          {moodOptions.map((option) => (
-            <Card 
-              key={option.type}
-              className={`cursor-pointer hover:shadow-md transition-shadow ${
-                selectedMood?.type === option.type 
-                  ? 'border-2 border-primary' 
-                  : 'border border-gray-200'
-              }`}
-              onClick={() => setSelectedMood(option)}
-            >
-              <CardContent className="p-4 flex flex-col items-center justify-center">
-                <span className="text-4xl">{option.emoji}</span>
-                <span className="text-xs mt-2 text-center">{option.label}</span>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="mt-8">
-          <h3 className="text-sm font-medium mb-2">What's on your mind? (optional)</h3>
-          <Textarea
-            placeholder="Share your thoughts, feelings, or anything that's on your mind today..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="min-h-[120px]"
-          />
-          <p className="text-xs text-gray-500 mt-2">
-            This will be shared with your care team to help them support you better.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-4 mt-8">
-          <Button 
-            onClick={handleSubmit} 
-            className="w-full"
-            disabled={logMoodMutation.isPending}
-          >
-            {logMoodMutation.isPending ? "Logging..." : "Save Mood Log"}
-          </Button>
-          <Button 
-            variant="ghost" 
-            onClick={handleBack}
-            className="w-full"
-          >
-            Cancel
-          </Button>
-        </div>
+    <MobileLayout headerTitle="Mood Log" showBackButton>
+      <div className="p-4 space-y-5">
+        {/* Mood log form */}
+        <Card>
+          <CardContent className="pt-4">
+            <h3 className="text-lg font-medium mb-4">How are you feeling today?</h3>
+            
+            <div className="grid grid-cols-5 gap-2 mb-4">
+              {moodOptions.map((mood) => (
+                <button
+                  key={mood.type}
+                  type="button"
+                  onClick={() => handleMoodSelection(mood)}
+                  className={`flex flex-col items-center p-3 rounded-lg border transition-colors ${
+                    selectedMood?.type === mood.type
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <span className="text-2xl mb-1">{mood.emoji}</span>
+                  <span className="text-xs">{mood.label}</span>
+                </button>
+              ))}
+            </div>
+            
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="notes">Additional notes (optional)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="What's on your mind today?"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={!selectedMood || addMoodMutation.isPending}
+                >
+                  Log Mood
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+        
+        {/* Recent mood logs */}
+        <Card>
+          <CardContent className="pt-4">
+            <h3 className="text-lg font-medium mb-3">Your Recent Moods</h3>
+            
+            {isLoading ? (
+              <div className="text-center py-6">
+                <div className="text-sm text-gray-500">Loading your moods...</div>
+              </div>
+            ) : recentMoods && recentMoods.length > 0 ? (
+              <div className="space-y-3">
+                {recentMoods.map((mood, index) => (
+                  <div key={index} className="flex p-3 rounded-lg border">
+                    <div className="flex-shrink-0 text-2xl mr-3">
+                      {mood.emoji}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <div className="font-medium">
+                          {mood.mood.charAt(0).toUpperCase() + mood.mood.slice(1)}
+                        </div>
+                        <div className="text-xs text-gray-500 flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {new Date(mood.createdAt).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </div>
+                      {mood.notes && (
+                        <p className="text-sm text-gray-600 mt-1">{mood.notes}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>No mood logs yet.</p>
+                <p className="text-sm mt-2">Log your first mood to see your history here.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Info card */}
+        <Card className="bg-blue-50 border-blue-100">
+          <CardContent className="pt-4">
+            <h3 className="text-md font-medium text-blue-800 mb-2">
+              Why Track Your Mood?
+            </h3>
+            <p className="text-sm text-blue-700">
+              Tracking your mood helps you and your care team identify patterns, 
+              triggers, and progress in your wellness journey. Regular tracking 
+              provides valuable insights for personalized support.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </MobileLayout>
   );

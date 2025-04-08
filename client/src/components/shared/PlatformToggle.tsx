@@ -1,43 +1,67 @@
-import React from "react";
-import { useLocation } from "wouter";
+import React, { useState } from "react";
+import { useLocation, useRouter } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Monitor } from "lucide-react";
+import { Monitor, Smartphone } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function PlatformToggle() {
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
+  const [, navigate] = useRouter();
   
+  // Determine if we're in the mobile view
   const isMobileView = location.startsWith("/mobile");
   
   const handleToggle = () => {
     if (isMobileView) {
-      // Switch to web view
-      setLocation("/");
+      // Switch to desktop view - convert "/mobile/..." paths to "/dashboard/..."
+      const desktopPath = location.replace("/mobile", "/dashboard");
+      navigate(desktopPath);
     } else {
-      // Switch to mobile view
-      setLocation("/mobile");
+      // Switch to mobile view - convert other paths to "/mobile/..."
+      const parts = location.split("/").filter(Boolean);
+      
+      // For the home page or empty path
+      if (parts.length === 0) {
+        navigate("/mobile");
+        return;
+      }
+      
+      // For other paths
+      navigate("/mobile");
     }
   };
   
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleToggle}
-      className="flex items-center gap-2"
-    >
-      {isMobileView ? (
-        <>
-          <Monitor className="h-4 w-4" />
-          <span className="hidden sm:inline">Switch to Web View</span>
-          <span className="sm:hidden">Web</span>
-        </>
-      ) : (
-        <>
-          <Smartphone className="h-4 w-4" />
-          <span className="hidden sm:inline">Switch to Mobile View</span>
-          <span className="sm:hidden">Mobile</span>
-        </>
-      )}
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="text-white hover:text-white/80"
+        >
+          {isMobileView ? <Smartphone className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={handleToggle}>
+          {isMobileView ? (
+            <>
+              <Monitor className="mr-2 h-4 w-4" />
+              <span>Switch to Desktop</span>
+            </>
+          ) : (
+            <>
+              <Smartphone className="mr-2 h-4 w-4" />
+              <span>Switch to Mobile</span>
+            </>
+          )}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

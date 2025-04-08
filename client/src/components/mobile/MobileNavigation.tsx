@@ -1,72 +1,72 @@
 import React from "react";
-import { useLocation, Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
-  Home, 
-  MessageCircle, 
-  Target, 
-  BookOpen, 
-  User,
-  SmilePlus
+  Home,
+  Target,
+  MessageCircle,
+  Users,
+  FileText,
+  User
 } from "lucide-react";
 
 export default function MobileNavigation() {
   const [location] = useLocation();
   
   const navItems = [
-    {
-      icon: Home,
-      label: "Home",
+    { 
+      icon: Home, 
+      label: "Home", 
       href: "/mobile",
-      active: location === "/mobile"
+      active: location === "/mobile" 
     },
-    {
-      icon: SmilePlus,
-      label: "Mood",
-      href: "/mobile/mood",
-      active: location === "/mobile/mood"
-    },
-    {
-      icon: Target,
-      label: "Goals",
+    { 
+      icon: Target, 
+      label: "Goals", 
       href: "/mobile/goals",
-      active: location === "/mobile/goals"
+      active: location === "/mobile/goals" 
     },
-    {
-      icon: MessageCircle,
-      label: "Chat",
+    { 
+      icon: MessageCircle, 
+      label: "Chat", 
       href: "/mobile/chat",
-      active: location === "/mobile/chat"
+      active: location === "/mobile/chat" 
     },
-    {
-      icon: BookOpen,
-      label: "Resources",
+    { 
+      icon: Users, 
+      label: "Care Team", 
+      href: "/mobile/care-team",
+      active: location === "/mobile/care-team" 
+    },
+    { 
+      icon: FileText, 
+      label: "Resources", 
       href: "/mobile/resources",
-      active: location === "/mobile/resources"
+      active: location === "/mobile/resources" 
     },
-    {
-      icon: User,
-      label: "Profile",
+    { 
+      icon: User, 
+      label: "Profile", 
       href: "/mobile/profile",
-      active: location === "/mobile/profile"
+      active: location === "/mobile/profile" 
     }
   ];
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-top-lg z-10">
-      <div className="flex justify-around items-center h-16 px-2">
-        {navItems.map((item) => (
-          <Link key={item.href} href={item.href}>
-            <a className={`flex flex-col items-center justify-center w-14 h-full ${
-              item.active ? "text-primary" : "text-gray-500"
-            }`}>
-              <item.icon className={`w-5 h-5 ${
-                item.active ? "text-primary" : "text-gray-500"
-              }`} />
-              <span className="text-xs mt-1">{item.label}</span>
-            </a>
-          </Link>
-        ))}
-      </div>
-    </nav>
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-between items-center px-2 py-1 z-10">
+      {navItems.map((item, index) => (
+        <Link key={index} href={item.href}>
+          <a className={`flex flex-col items-center py-1 px-2 text-xs ${
+            item.active 
+              ? "text-primary" 
+              : "text-gray-500 hover:text-gray-700"
+          }`}>
+            <item.icon className={`w-5 h-5 mb-1 ${
+              item.active ? "text-primary" : "text-gray-500"  
+            }`} />
+            <span>{item.label}</span>
+          </a>
+        </Link>
+      ))}
+    </div>
   );
 }
