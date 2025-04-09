@@ -58,7 +58,7 @@ export default function MobileLayout({
                 </Link>
               </Button>
             )}
-            <h1 className="text-lg font-semibold">{headerTitle}</h1>
+            <h1 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">{headerTitle}</h1>
           </div>
           <div className="flex items-center gap-2">
             {showNotifications && (
@@ -72,7 +72,7 @@ export default function MobileLayout({
                   <Bell className="h-5 w-5" />
                   {unreadNotifications > 0 && (
                     <Badge 
-                      className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-red-500"
+                      className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-gradient-to-r from-blue-500 to-purple-500"
                     >
                       {unreadNotifications}
                     </Badge>

@@ -39,18 +39,18 @@ export default function Dashboard() {
       {/* Main Dashboard Content */}
       <div className="flex-1 p-6">
         {/* Header */}
-        <header className="glassmorphic flex items-center justify-between mb-6 p-4 rounded-xl">
+        <header className="apple-card flex items-center justify-between mb-6 p-4 rounded-xl">
           <div>
-            <h1 className="text-2xl font-heading font-semibold">
+            <h1 className="text-2xl font-heading font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
               Hello, <span>{isLoadingUser ? '...' : userData?.firstName || 'User'}</span> 👋
             </h1>
-            <p className="text-neutral-500">Today is <span>{currentDate}</span></p>
+            <p className="text-white/70">Today is <span>{currentDate}</span></p>
           </div>
           
           <div className="flex space-x-4">
             {/* Breathing Exercise Button */}
             <button 
-              className="px-4 py-2 rounded-lg bg-primary-50 text-primary-700 flex items-center pulse-animation"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-400 border border-blue-500/30 flex items-center pulse-animation"
               onClick={handleOpenBreathingExercise}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -60,11 +60,11 @@ export default function Dashboard() {
             </button>
             
             {/* Notification Button */}
-            <button className="relative p-2 rounded-lg bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition-all">
+            <button className="relative p-2 rounded-lg bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600/30 transition-all">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
-              <span className="absolute top-0 right-0 w-4 h-4 bg-primary-500 rounded-full flex items-center justify-center text-white text-xs">2</span>
+              <span className="absolute top-0 right-0 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs">2</span>
             </button>
           </div>
         </header>
