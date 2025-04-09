@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { SccsScore } from "@shared/schema";
+import { Link } from "wouter";
+import { ArrowRight } from "lucide-react";
 
 export default function SCCSProgress() {
   // Fetch SCCS progress data
@@ -153,6 +155,18 @@ export default function SCCSProgress() {
             </div>
           </div>
         </div>
+      </div>
+      
+      <div className="mt-4 flex justify-between items-center">
+        <div className="text-sm text-gray-500">
+          Last updated: {new Date().toLocaleDateString()}
+        </div>
+        <Link href="/sccs">
+          <a className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium text-sm">
+            View Full Report & Leaderboard
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </a>
+        </Link>
       </div>
     </div>
   );

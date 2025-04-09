@@ -142,6 +142,194 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Server error" });
     }
   });
+  
+  // Get full SCCS report
+  app.get("/api/sccs/report", async (req: Request, res: Response) => {
+    try {
+      const currentUserId = 1; // In a real app, get from session
+      const sccsScore = await storage.getCurrentSccsScore(currentUserId);
+      
+      if (!sccsScore) {
+        return res.status(404).json({ message: "SCCS score not found" });
+      }
+      
+      // Get latest moods, events, and activity for report
+      const recentMoods = await storage.getRecentMoods(currentUserId);
+      const upcomingEvents = await storage.getUpcomingEvents(currentUserId);
+      const dailySteps = await storage.getDailySteps(currentUserId);
+      
+      // Create full report with all relevant data
+      const report = {
+        score: sccsScore,
+        history: [
+          // Simulate 6-month history
+          { date: new Date(Date.now() - 5 * 30 * 86400000).toISOString().split('T')[0], score: Math.max(30, sccsScore.score - 35) },
+          { date: new Date(Date.now() - 4 * 30 * 86400000).toISOString().split('T')[0], score: Math.max(30, sccsScore.score - 28) },
+          { date: new Date(Date.now() - 3 * 30 * 86400000).toISOString().split('T')[0], score: Math.max(30, sccsScore.score - 21) },
+          { date: new Date(Date.now() - 2 * 30 * 86400000).toISOString().split('T')[0], score: Math.max(30, sccsScore.score - 14) },
+          { date: new Date(Date.now() - 1 * 30 * 86400000).toISOString().split('T')[0], score: Math.max(30, sccsScore.score - 7) },
+          { date: new Date().toISOString().split('T')[0], score: sccsScore.score },
+        ],
+        strengthAreas: [
+          {
+            category: "Consistency",
+            score: sccsScore.consistency,
+            maxScore: 30,
+            description: "Shows up regularly for appointments and commitments"
+          },
+          {
+            category: "Engagement",
+            score: sccsScore.engagement,
+            maxScore: 30,
+            description: "Actively participates in community and program activities"
+          },
+          {
+            category: "Milestones",
+            score: sccsScore.milestones,
+            maxScore: 30,
+            description: "Achieves personal and program goals and milestones"
+          },
+          {
+            category: "Peer Support",
+            score: sccsScore.peerSupport,
+            maxScore: 30,
+            description: "Engages with and supports peers on similar journeys"
+          }
+        ],
+        recentActivity: {
+          moods: recentMoods.slice(0, 5),
+          events: upcomingEvents.slice(0, 3),
+          completedTasks: dailySteps.filter(step => step.completed).slice(0, 5)
+        },
+        recommendations: [
+          "Attend 2 more community events this month to boost your engagement score",
+          "Log your mood daily to improve consistency score",
+          "Connect with 3 more peers in your program for peer support growth"
+        ]
+      };
+      
+      return res.json(report);
+    } catch (error) {
+      console.error("Error generating SCCS report:", error);
+      return res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Get leaderboard data
+  app.get("/api/sccs/leaderboard", async (req: Request, res: Response) => {
+    try {
+      const currentUserId = 1; // In a real app, get from session
+      
+      // In a real app, this would fetch actual leaderboard data from the database
+      // For now, we'll create simulated data
+      const leaderboardData = [
+        {
+          userId: 5,
+          username: "AngelaT",
+          avatarInitials: "AT",
+          score: 92,
+          rank: 1,
+          tier: "platinum",
+          recentGrowth: 12
+        },
+        {
+          userId: 8,
+          username: "MarcusB",
+          avatarInitials: "MB",
+          score: 88,
+          rank: 2,
+          tier: "gold",
+          recentGrowth: 5
+        },
+        {
+          userId: 4,
+          username: "SarahK",
+          avatarInitials: "SK",
+          score: 85,
+          rank: 3,
+          tier: "gold",
+          recentGrowth: 7
+        },
+        {
+          userId: 10,
+          username: "DavidW",
+          avatarInitials: "DW",
+          score: 81,
+          rank: 4,
+          tier: "gold",
+          recentGrowth: 3
+        },
+        {
+          userId: 2,
+          username: "jsmith",
+          avatarInitials: "JS",
+          score: 73,
+          rank: 5,
+          tier: "silver",
+          recentGrowth: 9,
+          isCurrentUser: true
+        },
+        {
+          userId: 12,
+          username: "RobertL",
+          avatarInitials: "RL",
+          score: 70,
+          rank: 6,
+          tier: "silver",
+          recentGrowth: 4
+        },
+        {
+          userId: 7,
+          username: "TanyaM",
+          avatarInitials: "TM",
+          score: 67,
+          rank: 7,
+          tier: "silver",
+          recentGrowth: 2
+        },
+        {
+          userId: 15,
+          username: "KristenF",
+          avatarInitials: "KF",
+          score: 62,
+          rank: 8,
+          tier: "silver",
+          recentGrowth: 8
+        },
+        {
+          userId: 20,
+          username: "MichaelC",
+          avatarInitials: "MC",
+          score: 58,
+          rank: 9,
+          tier: "bronze",
+          recentGrowth: 6
+        },
+        {
+          userId: 18,
+          username: "JasonT",
+          avatarInitials: "JT",
+          score: 53,
+          rank: 10,
+          tier: "bronze",
+          recentGrowth: 11
+        }
+      ];
+      
+      // Add user's data and position
+      const userData = {
+        userRank: 5,
+        totalUsers: 253,
+        percentile: 98, // Top 2%
+        leaderboard: leaderboardData
+      };
+      
+      return res.json(userData);
+    } catch (error) {
+      console.error("Error fetching leaderboard data:", error);
+      return res.status(500).json({ message: "Server error" });
+    }
+  });
 
   // Events routes
   app.get("/api/events/upcoming", async (req: Request, res: Response) => {

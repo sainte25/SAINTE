@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 // Web app pages
 import Dashboard from "@/pages/Dashboard";
 import AICompanionChat from "@/pages/AICompanionChat";
+import SCCSPage from "@/pages/SCCSPage";
 import NotFound from "@/pages/not-found";
 
 // Mobile app pages
@@ -64,6 +65,7 @@ function Router() {
       {/* Web routes */}
       <Route path="/" component={Dashboard} />
       <Route path="/ai-companion" component={AICompanionChat} />
+      <Route path="/sccs" component={SCCSPage} />
       
       {/* Mobile app routes */}
       <Route path="/mobile/:rest*" component={MobileApp} />
