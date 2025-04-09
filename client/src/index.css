@@ -3,11 +3,52 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --primary-rgb: 138, 43, 226;
+    --neon-blue: 70, 130, 255;
+    --neon-purple: 138, 43, 226;
+    --neon-pink: 255, 61, 148;
+    --neon-green: 43, 255, 136;
+    
+    --card-bg-light: 255, 255, 255, 0.05;
+    --card-bg-dark: 15, 15, 25, 0.7;
+    --card-border-light: 255, 255, 255, 0.08;
+    --card-border-dark: 255, 255, 255, 0.05;
+    
+    --gradient-start: hsl(262, 80%, 50%);
+    --gradient-end: hsl(290, 70%, 40%);
+  }
+
   * {
     @apply border-border;
   }
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(var(--neon-purple), 0.03) 0%, transparent 20%),
+      radial-gradient(circle at 80% 40%, rgba(var(--neon-blue), 0.03) 0%, transparent 20%),
+      radial-gradient(circle at 40% 80%, rgba(var(--neon-pink), 0.03) 0%, transparent 20%);
+    background-attachment: fixed;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(15, 15, 25, 0.2);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(var(--primary-rgb), 0.4);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--primary-rgb), 0.6);
   }
 }

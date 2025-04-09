@@ -6,6 +6,7 @@ import ChatPage from "./ChatPage";
 import ResourcesPage from "./ResourcesPage";
 import ProfilePage from "./ProfilePage";
 import MoodLogPage from "./MoodLogPage";
+import CareTeamPage from "./CareTeamPage";
 
 export default function MobileIndex() {
   const [location, setLocation] = useLocation();
@@ -25,6 +26,7 @@ export default function MobileIndex() {
       <Route path="/mobile" component={HomePage} />
       <Route path="/mobile/goals" component={GoalsPage} />
       <Route path="/mobile/chat" component={ChatPage} />
+      <Route path="/mobile/care-team" component={CareTeamPage} />
       <Route path="/mobile/resources" component={ResourcesPage} />
       <Route path="/mobile/profile" component={ProfilePage} />
       <Route path="/mobile/mood" component={MoodLogPage} />

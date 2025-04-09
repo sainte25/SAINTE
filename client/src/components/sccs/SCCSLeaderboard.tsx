@@ -204,8 +204,12 @@ export default function SCCSLeaderboard() {
               <div>
                 <p className="text-sm text-muted-foreground">Points to Next Rank</p>
                 <p className="text-lg font-bold">
-                  {leaderboard.find((p: LeaderboardPlayer) => p.rank === userRank - 1)?.score - 
-                   leaderboard.find((p: LeaderboardPlayer) => p.isCurrentUser === true)?.score || 0}
+                  {(() => {
+                    if (!leaderboard || leaderboard.length === 0) return 0;
+                    const nextRankPlayer = leaderboard.find((p: LeaderboardPlayer) => p.rank === userRank - 1);
+                    const currentUser = leaderboard.find((p: LeaderboardPlayer) => p.isCurrentUser === true);
+                    return nextRankPlayer && currentUser ? nextRankPlayer.score - currentUser.score : 0;
+                  })()}
                 </p>
               </div>
             </CardContent>
