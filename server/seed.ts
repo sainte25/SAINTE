@@ -39,8 +39,10 @@ async function seedDatabase() {
       date: today,
       userId: user.id,
       score: 73,
-      level: 2,
-      description: "Building consistent social capital through regular participation and engagement.",
+      consistency: 22, // out of 30
+      engagement: 18, // out of 30
+      milestones: 15, // out of 30
+      peerSupport: 18, // out of 30
       createdAt: new Date()
     }).returning();
 
