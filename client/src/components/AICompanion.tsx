@@ -1,9 +1,198 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { Mic, X, Pause } from "lucide-react";
 
+// Chat voice interface (fullscreen)
+export function AICompanionVoiceChat() {
+  const [isListening, setIsListening] = useState(false);
+  
+  // Audio visualizer animation
+  const audioRef = useRef<HTMLDivElement>(null);
+  
+  const startListening = () => {
+    setIsListening(true);
+    
+    // Start audio visualizer animation
+    if (audioRef.current) {
+      const bars = audioRef.current.querySelectorAll('.audio-bar');
+      bars.forEach(bar => {
+        const randomHeight = Math.floor(Math.random() * 15) + 5;
+        (bar as HTMLElement).style.height = `${randomHeight}px`;
+        (bar as HTMLElement).style.animation = `audioAnimation ${Math.random() * 0.5 + 0.7}s ease-in-out infinite alternate`;
+      });
+    }
+  };
+  
+  const stopListening = () => {
+    setIsListening(false);
+  };
+  
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-black text-white p-6">
+      {/* User profile image */}
+      <div className="mt-12 flex flex-col items-center">
+        <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-white/10">
+          <div className="w-full h-full bg-gradient-radial from-black to-black">
+            {/* This would be the user image placeholder */}
+            <div className="w-full h-full rounded-full overflow-hidden">
+              <img 
+                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjEwMCIgZmlsbD0iI2YwYTUwMCIvPjwvc3ZnPg==" 
+                alt="User"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Audio visualizer */}
+        <div className="audio-visualizer mt-8" ref={audioRef}>
+          <div className="audio-bar h-3"></div>
+          <div className="audio-bar h-5"></div>
+          <div className="audio-bar h-12"></div>
+          <div className="audio-bar h-8"></div>
+          <div className="audio-bar h-10"></div>
+        </div>
+        
+        <p className="mt-6 text-white/90 text-sm">
+          {isListening ? "Listening..." : "You can start talking"}
+        </p>
+      </div>
+      
+      {/* Controls */}
+      <div className="flex items-center space-x-4 mb-12">
+        {isListening ? (
+          <button 
+            onClick={stopListening}
+            className="voice-button bg-gray-800 text-white"
+          >
+            <Pause className="w-6 h-6" />
+          </button>
+        ) : (
+          <button 
+            onClick={startListening}
+            className="voice-button bg-red-600 text-white"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Chat interface based on the second screenshot
+export function AICompanionChat() {
+  const [messages, setMessages] = useState([
+    {
+      role: 'ai',
+      content: '[Recommended Training Program]\nRemote IT Training - 8 Weeks, Fully Online, No Cost\nSuccess Rate: 87% of grads land jobs in 3 months'
+    },
+    {
+      role: 'user',
+      content: 'That actually sounds like a solid move. But what if I don\'t finish it?'
+    },
+    {
+      role: 'ai',
+      content: 'What if you do? What if you make a move today that completely shifts your future six months from now? I see people just like you leveling up every day. Why not you?'
+    },
+    {
+      role: 'ai',
+      content: '[Take the First Step]\nSign Up for IT Training (2-Min Process)'
+    },
+    {
+      role: 'user',
+      content: 'Alright. Let\'s do it.'
+    },
+    {
+      role: 'ai',
+      content: '[IT Training Enrollment Complete ✅]'
+    },
+    {
+      role: 'ai',
+      content: 'And just like that—you made a power move today. Small steps, big outcomes. Let\'s check back in tomorrow and see what\'s next.'
+    },
+    {
+      role: 'user',
+      content: 'I appreciate that. Needed this push today.'
+    },
+    {
+      role: 'ai',
+      content: 'You don\'t just need this—you deserve this. Keep showing up for yourself. I\'ll be here when you\'re ready for the next step.'
+    }
+  ]);
+  
+  const [newMessage, setNewMessage] = useState('');
+  
+  const sendMessage = () => {
+    if (newMessage.trim() === '') return;
+    
+    setMessages([...messages, {
+      role: 'user',
+      content: newMessage
+    }]);
+    
+    setNewMessage('');
+    
+    // In real implementation, this would call the API and append the AI response
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        role: 'ai',
+        content: 'I appreciate your message. I\'m here to support you today.'
+      }]);
+    }, 1000);
+  };
+  
+  return (
+    <div className="flex flex-col h-screen bg-black text-white">
+      {/* Header - would be part of MobileLayout in real implementation */}
+      <div className="p-4 border-b border-gray-800 flex items-center">
+        <div className="w-8 h-8 rounded-full bg-orange-500 mr-2"></div>
+        <div>
+          <div className="font-semibold">SAINTEAI</div>
+          <div className="text-xs text-gray-400">@Official</div>
+        </div>
+      </div>
+      
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message, index) => (
+          <div 
+            key={index} 
+            className={`message-bubble ${message.role === 'user' ? 'user ml-auto' : 'ai'}`}
+          >
+            {message.content}
+          </div>
+        ))}
+      </div>
+      
+      {/* Input area */}
+      <div className="px-4 py-2 border-t border-gray-800">
+        <div className="flex items-center p-2 rounded-full bg-gray-800">
+          <input
+            type="text"
+            placeholder="Hold and Speak"
+            className="flex-1 bg-transparent border-none focus:outline-none text-white mx-2"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          />
+          <button 
+            onClick={() => {}} 
+            className="w-8 h-8 flex items-center justify-center text-gray-400"
+          >
+            <Mic className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Dashboard compact version
 export default function AICompanion() {
   const [isVisible, setIsVisible] = useState(true);
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
 
   // Fetch personalized message from AI
   const { data, isLoading, error } = useQuery<{ message: string }>({
@@ -14,8 +203,13 @@ export default function AICompanion() {
   const handleDismiss = () => {
     setIsVisible(false);
   };
+  
+  const activateVoice = () => {
+    setIsVoiceActive(true);
+  };
 
   if (!isVisible) return null;
+  if (isVoiceActive) return <AICompanionVoiceChat />;
 
   // Get the message text
   const messageText = isLoading 
@@ -23,44 +217,46 @@ export default function AICompanion() {
     : data?.message || "I'm here to listen whenever you're ready to talk.";
 
   return (
-    <div className="mt-6 glassmorphic rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-all">
+    <div className="apple-card my-4">
       <div className="flex items-start">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 flex items-center justify-center text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-          </svg>
+        <div className="avatar-circle avatar-glow-orange mr-3">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-black border border-white/10">
+            <img 
+              src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjEwMCIgZmlsbD0iI2YwYTUwMCIvPjwvc3ZnPg==" 
+              alt="AI"
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
-        <div className="ml-4 flex-1">
-          <h2 className="text-xl font-heading font-semibold mb-1">AI Support Companion</h2>
+        
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold mb-1">SAINTE AI</h3>
+          
           {isLoading ? (
-            <div className="h-16 flex items-center">
-              <div className="animate-pulse flex space-x-2">
-                <div className="rounded-full bg-neutral-200 h-3 w-3"></div>
-                <div className="rounded-full bg-neutral-200 h-3 w-3"></div>
-                <div className="rounded-full bg-neutral-200 h-3 w-3"></div>
-              </div>
+            <div className="audio-visualizer my-2 justify-start">
+              <div className="audio-bar h-2"></div>
+              <div className="audio-bar h-3"></div>
+              <div className="audio-bar h-4"></div>
+              <div className="audio-bar h-2"></div>
             </div>
-          ) : error ? (
-            <p className="text-neutral-600">
-              I'm here to support you today. What would you like to discuss about your progress?
-            </p>
           ) : (
-            <p className="text-neutral-600">
+            <p className="text-sm text-gray-300 mb-3">
               {messageText}
             </p>
           )}
-          <div className="mt-4 flex space-x-4">
-            <Link href="/ai-companion">
-              <a className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all">
-                Chat Now
-              </a>
+          
+          <div className="flex space-x-3">
+            <Link href="/mobile/chat">
+              <button className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-800 rounded-md text-sm">
+                Chat
+              </button>
             </Link>
+            
             <button 
-              className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-all"
-              onClick={handleDismiss}
+              className="px-3 py-1.5 border border-white/10 rounded-md text-sm"
+              onClick={activateVoice}
             >
-              Maybe Later
+              Voice
             </button>
           </div>
         </div>

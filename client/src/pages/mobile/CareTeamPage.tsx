@@ -1,107 +1,127 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import MobileLayout from "@/components/mobile/MobileLayout";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Phone, MessageCircle, Star } from "lucide-react";
+import { ChevronRight, Calendar } from "lucide-react";
 import { CareTeamMember } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Sample data to match the design, we'll keep as fallback
+const sampleCareTeam = [
+  {
+    id: 1,
+    teamMemberName: "Dr. Sarah",
+    teamMemberRole: "Primary Care Provider",
+    teamMemberInitials: "DS",
+    avatarColor: "purple",
+    isAvailable: true
+  },
+  {
+    id: 2,
+    teamMemberName: "Therapist John",
+    teamMemberRole: "Behavioral Health",
+    teamMemberInitials: "TJ",
+    avatarColor: "green",
+    isAvailable: true
+  },
+  {
+    id: 3,
+    teamMemberName: "Nurse Michael",
+    teamMemberRole: "Healthcare Provider",
+    teamMemberInitials: "NM",
+    avatarColor: "yellow",
+    isAvailable: false
+  },
+  {
+    id: 4,
+    teamMemberName: "Specialist Lisa",
+    teamMemberRole: "Case Manager",
+    teamMemberInitials: "SL",
+    avatarColor: "pink",
+    isAvailable: true
+  },
+  {
+    id: 5,
+    teamMemberName: "Coach David",
+    teamMemberRole: "Wellness Coach",
+    teamMemberInitials: "CD",
+    avatarColor: "blue",
+    isAvailable: true
+  }
+];
+
+const sampleAppointments = [
+  {
+    id: 1,
+    memberName: "Dr. Sarah",
+    date: "Tomorrow",
+    time: "10:00 AM",
+    avatarColor: "purple"
+  },
+  {
+    id: 2,
+    memberName: "Therapist John",
+    date: "Friday",
+    time: "2:30 PM", 
+    avatarColor: "green"
+  }
+];
+
 export default function CareTeamPage() {
   // Fetch care team data
-  const { data: careTeam, isLoading } = useQuery<CareTeamMember[]>({
+  const { data: apiCareTeam, isLoading } = useQuery<CareTeamMember[]>({
     queryKey: ['/api/care-team'],
   });
+  
+  // Use api data if available, otherwise use sample data
+  const careTeam = apiCareTeam && apiCareTeam.length > 0 ? apiCareTeam.map((member, index) => ({
+    ...member,
+    avatarColor: ["purple", "green", "yellow", "pink", "blue"][index % 5]
+  })) : sampleCareTeam;
 
   return (
     <MobileLayout headerTitle="Care Team" showBackButton={true}>
-      <div className="p-4 space-y-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Support Network</h2>
+      <div className="bg-black min-h-screen text-white">
+        {/* Team Members Grid */}
+        <div className="grid grid-cols-3 gap-2 px-4 py-6">
+          {careTeam.map((member) => (
+            <div key={member.id} className="flex flex-col items-center">
+              <div className={`avatar-circle avatar-glow-${member.avatarColor} mb-2`}>
+                <div className="w-20 h-20 rounded-full bg-black flex items-center justify-center overflow-hidden border-2 border-white/20">
+                  <span className="text-xl font-medium">{member.teamMemberInitials}</span>
+                </div>
+              </div>
+              <span className="text-center text-sm font-medium">{member.teamMemberName}</span>
+            </div>
+          ))}
         </div>
-
-        {isLoading ? (
-          // Loading skeleton
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="bg-white/80 dark:bg-gray-800/40 backdrop-blur-sm border-none">
-                <CardContent className="p-0">
-                  <div className="flex items-center p-4">
-                    <Skeleton className="h-12 w-12 rounded-full" />
-                    <div className="ml-4 flex-1">
-                      <Skeleton className="h-4 w-40 mb-2" />
-                      <Skeleton className="h-3 w-24" />
-                    </div>
-                    <div className="flex space-x-2">
-                      <Skeleton className="h-8 w-8 rounded-full" />
-                      <Skeleton className="h-8 w-8 rounded-full" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : careTeam && careTeam.length > 0 ? (
-          <div className="space-y-4">
-            {careTeam.map((member) => (
-              <Card 
-                key={member.id} 
-                className="bg-white/80 dark:bg-gray-800/40 backdrop-blur-sm border-none hover:shadow-md transition-all duration-200"
-              >
-                <CardContent className="p-0">
-                  <div className="flex items-center p-4">
-                    <Avatar className="h-12 w-12 border-2 border-primary/20">
-                      <AvatarFallback className="bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300">
-                        {member.teamMemberInitials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="ml-4 flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-white flex items-center">
-                        {member.teamMemberName}
-                        {member.teamMemberRole === 'Primary Care Provider' && (
-                          <span className="ml-2 inline-flex items-center">
-                            <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                          </span>
-                        )}
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{member.teamMemberRole}</p>
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                        Available now
-                      </p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="icon" className="rounded-full h-9 w-9 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
-                        <Phone className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      </Button>
-                      <Button variant="outline" size="icon" className="rounded-full h-9 w-9 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
-                        <MessageCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      </Button>
+        
+        {/* Upcoming Appointments */}
+        <div className="mt-4 px-4">
+          <div className="apple-card mb-4">
+            <h2 className="text-lg font-semibold mb-3">Upcoming Appointments</h2>
+            
+            <div className="space-y-2">
+              {sampleAppointments.map((appointment) => (
+                <div 
+                  key={appointment.id} 
+                  className="apple-card flex items-center p-3 bg-black/40"
+                >
+                  <div className={`avatar-circle avatar-glow-${appointment.avatarColor} shrink-0`}>
+                    <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center border border-white/10">
+                      <Calendar className="w-4 h-4" />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                  
+                  <div className="ml-3 flex-1">
+                    <div className="font-medium">{appointment.memberName}</div>
+                    <div className="text-sm text-gray-400">{appointment.date}, {appointment.time}</div>
+                  </div>
+                  
+                  <ChevronRight className="w-5 h-5 text-gray-500" />
+                </div>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <p>No care team members assigned yet.</p>
-          </div>
-        )}
-
-        <div className="mt-8 bg-primary-50 dark:bg-primary-900/20 rounded-xl p-4 border border-primary-100 dark:border-primary-800">
-          <h3 className="text-md font-medium text-primary-800 dark:text-primary-300 mb-2">
-            Need immediate support?
-          </h3>
-          <p className="text-sm text-primary-700 dark:text-primary-400 mb-3">
-            Our support team is available 24/7 for urgent needs.
-          </p>
-          <Button 
-            className="w-full bg-primary hover:bg-primary/90 text-white" 
-            size="lg"
-          >
-            Request Emergency Support
-          </Button>
         </div>
       </div>
     </MobileLayout>

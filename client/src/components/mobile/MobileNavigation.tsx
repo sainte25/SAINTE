@@ -12,6 +12,7 @@ import {
 export default function MobileNavigation() {
   const [location] = useLocation();
   
+  // Using fewer navigation items for a cleaner interface
   const navItems = [
     { 
       icon: Home, 
@@ -38,12 +39,6 @@ export default function MobileNavigation() {
       active: location === "/mobile/care-team" 
     },
     { 
-      icon: FileText, 
-      label: "Resources", 
-      href: "/mobile/resources",
-      active: location === "/mobile/resources" 
-    },
-    { 
       icon: User, 
       label: "Profile", 
       href: "/mobile/profile",
@@ -52,15 +47,24 @@ export default function MobileNavigation() {
   ];
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-between items-center px-2 py-1 z-10">
+    <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 flex justify-around items-center px-4 py-2 z-10">
       {navItems.map((item, index) => (
-        <Link key={index} href={item.href} className={`flex flex-col items-center py-1 px-2 text-xs ${
-          item.active 
-            ? "text-primary" 
-            : "text-gray-500 hover:text-gray-700"
-        }`}>
+        <Link 
+          key={index} 
+          href={item.href} 
+          className={`flex flex-col items-center py-1 px-1 text-[10px] relative ${
+            item.active 
+              ? "text-white" 
+              : "text-gray-500 hover:text-gray-300"
+          }`}
+        >
+          {item.active && (
+            <span className="absolute -top-1 w-1 h-1 rounded-full bg-white"></span>
+          )}
           <item.icon className={`w-5 h-5 mb-1 ${
-            item.active ? "text-primary" : "text-gray-500"  
+            item.active 
+              ? "text-white" 
+              : "text-gray-500"  
           }`} />
           <span>{item.label}</span>
         </Link>

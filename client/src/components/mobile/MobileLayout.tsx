@@ -1,6 +1,6 @@
 import React from "react";
 import MobileNavigation from "./MobileNavigation";
-import { Bell, ChevronLeft } from "lucide-react";
+import { Bell, ChevronLeft, MoreVertical } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ interface MobileLayoutProps {
   backUrl?: string;
   showNotifications?: boolean;
   unreadNotifications?: number;
+  showMore?: boolean;
 }
 
 export default function MobileLayout({
@@ -21,24 +22,35 @@ export default function MobileLayout({
   showBackButton = false,
   backUrl = "/mobile",
   showNotifications = true,
-  unreadNotifications = 0
+  unreadNotifications = 0,
+  showMore = true
 }: MobileLayoutProps) {
   const [location] = useLocation();
 
   // Skip navigation on login and register pages
   const hideNavigation = ["/login", "/register"].includes(location);
-  
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-black text-white">
+      {/* Status Bar - Static representation of phone status */}
+      <div className="p-1 px-5 flex justify-between items-center bg-black text-white text-xs">
+        <div>9:41</div>
+        <div className="flex items-center space-x-1">
+          <span>•••</span>
+          <span>Wi-Fi</span>
+          <span>100%</span>
+        </div>
+      </div>
+      
       {/* Header */}
-      <header className="bg-primary text-white sticky top-0 z-10">
-        <div className="container py-3 flex items-center justify-between">
+      <header className="bg-black text-white sticky top-0 z-10">
+        <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center">
             {showBackButton && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="mr-2 text-white hover:text-white/80"
+                className="mr-2 text-white hover:text-white/80 rounded-full"
                 asChild
               >
                 <Link href={backUrl}>
@@ -53,7 +65,7 @@ export default function MobileLayout({
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:text-white/80 relative"
+                className="text-white hover:text-white/80 relative rounded-full"
                 asChild
               >
                 <Link href="/mobile/notifications">
@@ -69,15 +81,21 @@ export default function MobileLayout({
               </Button>
             )}
             
-            <PlatformToggle />
+            {showMore && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:text-white/80 rounded-full"
+              >
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 pb-16">
-        {children}
-      </main>
+      {/* Main content - no padding bottom since we handle that in the nav */}
+      <main className="flex-1">{children}</main>
 
       {/* Bottom navigation */}
       {!hideNavigation && <MobileNavigation />}

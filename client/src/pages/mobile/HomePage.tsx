@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import MobileLayout from "@/components/mobile/MobileLayout";
+import MoodSelector, { MoodHistory } from "@/components/MoodSelector";
+import AICompanion from "@/components/AICompanion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +35,7 @@ import {
 
 export default function HomePage() {
   const [showWelcomeCard, setShowWelcomeCard] = useState(true);
+  const [moodSelectorOpen, setMoodSelectorOpen] = useState(false);
 
   // Get current user data
   const { data: userData, isLoading: userLoading } = useQuery<User>({
@@ -150,7 +153,7 @@ export default function HomePage() {
           <QuickActionCard
             icon={SmilePlus}
             label="Log Mood"
-            href="/mobile/mood"
+            onClick={() => setMoodSelectorOpen(true)}
           />
           <QuickActionCard
             icon={MessageCircle}
@@ -609,6 +612,13 @@ export default function HomePage() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Mood Selector Dialog */}
+      <MoodSelector 
+        defaultOpen={false}
+        open={moodSelectorOpen}
+        onOpenChange={setMoodSelectorOpen}
+      />
     </MobileLayout>
   );
 }
@@ -616,18 +626,31 @@ export default function HomePage() {
 interface QuickActionCardProps {
   icon: React.ElementType;
   label: string;
-  href: string;
+  href?: string;
+  onClick?: () => void;
 }
 
-function QuickActionCard({ icon: Icon, label, href }: QuickActionCardProps) {
-  return (
-    <Link href={href}>
-      <a className="flex flex-col items-center justify-center p-4 bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-          <Icon className="w-5 h-5 text-primary" />
-        </div>
-        <span className="text-sm font-medium text-center">{label}</span>
-      </a>
-    </Link>
+function QuickActionCard({ icon: Icon, label, href, onClick }: QuickActionCardProps) {
+  const cardContent = (
+    <div className="flex flex-col items-center justify-center p-4 bg-black rounded-lg border border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mb-2">
+        <Icon className="w-5 h-5 text-primary" />
+      </div>
+      <span className="text-sm font-medium text-center text-white">{label}</span>
+    </div>
   );
+  
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="w-full">
+        {cardContent}
+      </button>
+    );
+  }
+  
+  return href ? (
+    <Link href={href}>
+      {cardContent}
+    </Link>
+  ) : null;
 }
