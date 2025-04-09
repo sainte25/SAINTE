@@ -19,7 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // In a real app, this would use session/auth to identify the current user
       // For demo we'll use a hardcoded ID
-      const currentUserId = 1;
+      const currentUserId = 3; // Updated after database reset
       const user = await storage.getUser(currentUserId);
       
       if (!user) {
@@ -37,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/daily-steps", async (req: Request, res: Response) => {
     try {
       // In a real app, this would filter by the current user's ID
-      const currentUserId = 1;
+      const currentUserId = 3; // Updated after database reset
       const steps = await storage.getDailySteps(currentUserId);
       return res.json(steps);
     } catch (error) {
@@ -129,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SCCS routes
   app.get("/api/sccs/current", async (req: Request, res: Response) => {
     try {
-      const currentUserId = 1; // In a real app, get from session
+      const currentUserId = 3; // Updated after database reset
       const sccsScore = await storage.getCurrentSccsScore(currentUserId);
       
       if (!sccsScore) {
@@ -146,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get full SCCS report
   app.get("/api/sccs/report", async (req: Request, res: Response) => {
     try {
-      const currentUserId = 1; // In a real app, get from session
+      const currentUserId = 3; // Updated after database reset
       const sccsScore = await storage.getCurrentSccsScore(currentUserId);
       
       if (!sccsScore) {
@@ -218,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get leaderboard data
   app.get("/api/sccs/leaderboard", async (req: Request, res: Response) => {
     try {
-      const currentUserId = 1; // In a real app, get from session
+      const currentUserId = 3; // Updated after database reset
       
       // In a real app, this would fetch actual leaderboard data from the database
       // For now, we'll create simulated data
@@ -439,7 +439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Companion Routes
   app.get("/api/ai/personalized-message", async (req: Request, res: Response) => {
     try {
-      const currentUserId = 1; // In a real app, get from session
+      const currentUserId = 3; // Updated after database reset
       
       // Get user data and context
       const user = await storage.getUser(currentUserId);
