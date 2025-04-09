@@ -112,9 +112,9 @@ export default function MoodSelector({
       )}
       
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="bg-black border-gray-800 text-white max-w-md w-full">
+        <DialogContent className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 text-white max-w-md w-full shadow-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-center">
+            <DialogTitle className="text-xl font-semibold text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
               How are you feeling?
             </DialogTitle>
           </DialogHeader>
@@ -138,7 +138,7 @@ export default function MoodSelector({
                           }}
                         >
                           <div 
-                            className={`mood-emoji ${field.value === moodOption.value ? 'border-2 border-purple-500' : ''}`}
+                            className={`mood-emoji ${field.value === moodOption.value ? 'border-2 border-blue-500' : ''}`}
                           >
                             {moodOption.emoji}
                           </div>
@@ -182,7 +182,7 @@ export default function MoodSelector({
                 </Button>
                 <Button 
                   type="submit" 
-                  className="bg-gradient-to-r from-purple-600 to-purple-800"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600"
                   disabled={moodMutation.isPending || !form.formState.isValid}
                 >
                   {moodMutation.isPending ? "Saving..." : "Save Mood"}
@@ -231,7 +231,7 @@ export function MoodHistory() {
         <div className="text-center">
           <MoodSelector 
             triggerButton={
-              <Button className="bg-gradient-to-r from-purple-600 to-purple-800">
+              <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
                 Log Your First Mood
               </Button>
             }
@@ -253,7 +253,7 @@ export function MoodHistory() {
         <h3 className="text-lg font-semibold">Mood History</h3>
         <MoodSelector 
           triggerButton={
-            <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300">
+            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
               + Log Mood
             </Button>
           }

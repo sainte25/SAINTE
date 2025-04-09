@@ -10,14 +10,14 @@
     --white: 255, 255, 255;
     
     /* Brand colors */
-    --primary-rgb: 138, 43, 226;
-    --primary-glow: 138, 43, 226, 0.5;
+    --primary-rgb: 77, 97, 230;
+    --primary-glow: 77, 97, 230, 0.5;
     
     /* Accent colors */
-    --accent-purple: 138, 43, 226;
-    --accent-blue: 70, 130, 255;
-    --accent-pink: 255, 61, 148;
-    --accent-green: 43, 226, 136;
+    --accent-purple: 123, 97, 255;
+    --accent-blue: 77, 97, 230;
+    --accent-pink: 235, 80, 190;
+    --accent-green: 40, 210, 150;
     --accent-teal: 0, 198, 172;
     --accent-yellow: 255, 204, 0;
     --accent-red: 255, 45, 85;
@@ -34,10 +34,10 @@
     --info: 0, 122, 255;
     
     /* Gradients */
-    --gradient-purple: linear-gradient(135deg, rgba(138, 43, 226, 1) 0%, rgba(90, 20, 180, 1) 100%);
-    --gradient-blue: linear-gradient(135deg, rgba(70, 130, 255, 1) 0%, rgba(10, 70, 200, 1) 100%);
-    --gradient-green: linear-gradient(135deg, rgba(43, 226, 136, 1) 0%, rgba(0, 170, 90, 1) 100%);
-    --gradient-pink: linear-gradient(135deg, rgba(255, 61, 148, 1) 0%, rgba(200, 30, 110, 1) 100%);
+    --gradient-purple: linear-gradient(135deg, rgba(123, 97, 255, 1) 0%, rgba(90, 70, 220, 1) 100%);
+    --gradient-blue: linear-gradient(135deg, rgba(77, 97, 230, 1) 0%, rgba(30, 50, 200, 1) 100%);
+    --gradient-green: linear-gradient(135deg, rgba(40, 210, 150, 1) 0%, rgba(0, 170, 120, 1) 100%);
+    --gradient-pink: linear-gradient(135deg, rgba(235, 80, 190, 1) 0%, rgba(190, 30, 150, 1) 100%);
     
     /* Spacing */
     --spacing-xs: 4px;
