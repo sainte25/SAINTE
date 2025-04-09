@@ -59,14 +59,14 @@ export default function MobileNavigation() {
           }`}
         >
           {item.active && (
-            <span className="absolute -top-1 w-4 h-1 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"></span>
+            <span className="absolute -top-1 w-4 h-1 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.7)]"></span>
           )}
           <item.icon className={`w-5 h-5 mb-1 ${
             item.active 
-              ? "text-blue-400" 
+              ? "text-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
               : "text-gray-500"  
           }`} />
-          <span className={item.active ? "bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500" : ""}>{item.label}</span>
+          <span className={item.active ? "text-blue-500" : ""}>{item.label}</span>
         </Link>
       ))}
     </div>
